@@ -1,146 +1,149 @@
-# ServiXphere Lite - Frontend
+# ServiXphere Lite 🚀
 
-React frontend for the ServiXphere Lite service marketplace application.
+ServiXphere Lite is a modern full-stack service marketplace platform that connects users with trusted and verified service professionals across multiple categories including Home Services, Technology, Beauty & Wellness, and Automobile Services.
 
-## Features
+The platform is designed to make finding skilled professionals fast, reliable, and secure.
 
-- **Public Pages:**
-  - Home page with service categories
-  - Browse services (filterable by category)
-  - Browse service providers (filterable by service)
-  - View provider profiles with ratings and reviews
-  - User authentication (Login/Signup)
+---
 
-- **User Features:**
-  - Book services from providers
-  - Submit anonymous reviews
-  - View and manage personal bookings
-  - Update booking status
+## ✨ Features
 
-- **Admin Features:**
-  - Admin dashboard with statistics
-  - CRUD operations for categories
-  - CRUD operations for services
-  - CRUD operations for service providers
-  - View all bookings
+### 👥 Users
+- Browse service categories
+- View verified service providers
+- Book services easily
+- Leave ratings and reviews
+- Secure authentication (JWT)
 
-## Tech Stack
+### 🧑‍🔧 Service Providers
+- Profile management
+- Service listings
+- Booking management
+- Ratings & reviews visibility
 
-- React 18
-- React Router v6
-- Axios for API calls
-- Context API for state management
-- Tailwind CSS for styling
-- Vite as build tool
+### 🛠️ Admin
+- Manage categories
+- Manage services
+- Manage providers
+- View all bookings
+- Platform statistics dashboard
 
-## Setup Instructions
+---
 
-1. **Install Dependencies:**
-   ```bash
-   npm install
-   ```
+## 🧱 Tech Stack
 
-2. **Configure Environment:**
-   - Copy `.env.example` to `.env`
-   - Update `VITE_API_BASE_URL` if your backend runs on a different port
-   ```env
-   VITE_API_BASE_URL=http://localhost:5000/api/v1
-   ```
+### Frontend
+- React (Vite)
+- Tailwind CSS
+- React Router
+- Axios
+- Context API (Auth)
 
-3. **Start Development Server:**
-   ```bash
-   npm run dev
-   ```
-   The app will be available at `http://localhost:3000`
+### Backend
+- Node.js
+- Express.js
+- MongoDB + Mongoose
+- JWT Authentication
+- REST API
 
-4. **Build for Production:**
-   ```bash
-   npm run build
-   ```
+---
 
-5. **Preview Production Build:**
-   ```bash
-   npm run preview
-   ```
+## 📁 Project Structure
 
-## Project Structure
+ServiXphere-Lite/
+│
+├── client/ # Frontend (React + Vite)
+│ ├── src/
+│ ├── package.json
+│ └── vite.config.js
+│
+├── server/ # Backend (Node + Express)
+│ ├── src/
+│ ├── package.json
+│ └── .env.example
+│
+├── .gitignore
+└── README.md
 
-```
-client/
-├── src/
-│   ├── api/              # API service functions
-│   │   ├── axios.js      # Axios instance with interceptors
-│   │   ├── auth.js       # Authentication API calls
-│   │   └── services.js   # All other API calls
-│   ├── components/       # Reusable UI components
-│   │   ├── Navbar.jsx
-│   │   ├── Footer.jsx
-│   │   ├── Loading.jsx
-│   │   └── Alert.jsx
-│   ├── context/          # React Context providers
-│   │   └── AuthContext.jsx
-│   ├── pages/            # Page components
-│   │   ├── Home.jsx
-│   │   ├── Services.jsx
-│   │   ├── Providers.jsx
-│   │   ├── ProviderProfile.jsx
-│   │   ├── Login.jsx
-│   │   ├── Signup.jsx
-│   │   ├── UserDashboard.jsx
-│   │   └── admin/        # Admin pages
-│   ├── routes/           # Route protection
-│   │   └── ProtectedRoute.jsx
-│   ├── styles/           # CSS files
-│   │   └── index.css
-│   ├── config.js         # Configuration
-│   ├── App.jsx           # Main app component
-│   └── main.jsx          # Entry point
-├── .env.example
-├── package.json
-└── vite.config.js
-```
+yaml
+Copy code
 
-## Authentication Flow
+---
 
-1. User registers/logs in through the auth pages
-2. JWT token is stored in localStorage
-3. AuthContext manages authentication state
-4. Protected routes check authentication status
-5. Axios interceptor adds token to all API requests
-6. On 401 errors, user is automatically logged out
+## ⚙️ Environment Variables
 
-## API Integration
+### Backend (`server/.env`)
+PORT=5000
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
 
-All API calls are made through centralized service functions in `src/api/`. The Axios instance automatically:
-- Adds the base URL
-- Includes JWT token in headers
-- Handles authentication errors
-- Manages request/response interceptors
+shell
+Copy code
 
-## Protected Routes
+### Frontend (`client/.env`)
+VITE_API_BASE_URL=http://localhost:5000/api/v1
 
-- **User Routes:** Require authentication (any logged-in user)
-- **Admin Routes:** Require authentication + admin role
+yaml
+Copy code
 
-Routes are protected using the `ProtectedRoute` component which checks:
-- Authentication status
-- User role (for admin routes)
+---
 
-## Default Credentials
+## 🚀 Getting Started (Local Development)
 
-After seeding the backend database, you can use:
+### 1️⃣ Clone the repository
+```bash
+git clone https://github.com/your-username/ServiXphere-Lite.git
+cd ServiXphere-Lite
+2️⃣ Backend setup
+bash
+Copy code
+cd server
+npm install
+npm run seed     # Seed initial data (categories, admin user)
+npm run dev
+Backend runs on:
+👉 http://localhost:5000
 
-**Admin:**
-- Email: `admin@servixphere.com`
-- Password: `admin123`
+3️⃣ Frontend setup
+bash
+Copy code
+cd ../client
+npm install
+npm run dev
+Frontend runs on:
+👉 http://localhost:3000
 
-**Regular User:**
-- Email: `john@example.com`
-- Password: `user123`
+🔐 Default Test Accounts (after seeding)
+Admin
 
-## Notes
+makefile
+Copy code
+Email: admin@servixphere.com
+Password: admin123
+User
 
-- Ensure the backend server is running before starting the frontend
-- CORS is configured in the backend to allow requests from `http://localhost:3000`
-- The app uses Tailwind CSS for styling - all components are responsive
-- Error handling is implemented throughout with user-friendly error messages
+makefile
+Copy code
+Email: john@example.com
+Password: user123
+📌 Core Highlights
+Responsive modern UI
+
+Clean component architecture
+
+Secure API communication
+
+Role-based access control
+
+Scalable service-oriented design
+
+🧠 Vision
+ServiXphere is built to scale into a trusted digital infrastructure for service discovery and booking in emerging markets, starting with Nigeria.
+
+📄 License
+This project is for educational and startup development purposes.
+All rights reserved.
+
+👤 Author
+Kelvin Marcus
+Founder — ServiXphere / ZEK Africa
