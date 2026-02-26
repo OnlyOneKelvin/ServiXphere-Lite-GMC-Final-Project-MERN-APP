@@ -23,6 +23,10 @@ const serviceProviderSchema = new mongoose.Schema(
         ref: 'Service',
       },
     ],
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
     averageRating: {
       type: Number,
       default: 0,

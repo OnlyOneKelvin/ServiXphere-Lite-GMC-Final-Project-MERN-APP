@@ -33,7 +33,24 @@ const bookingValidation = [
     .withMessage('Status must be pending, completed, or cancelled'),
 ];
 
+// Lighter validation for updates — all fields optional
+const bookingUpdateValidation = [
+  body('provider')
+    .optional()
+    .isMongoId()
+    .withMessage('Invalid provider ID'),
+  body('service')
+    .optional()
+    .isMongoId()
+    .withMessage('Invalid service ID'),
+  body('date').optional().isISO8601().withMessage('Invalid date format'),
+  body('status')
+    .optional()
+    .isIn(['pending', 'completed', 'cancelled'])
+    .withMessage('Status must be pending, completed, or cancelled'),
+];
+
 router.route('/').get(getBookings).post(bookingValidation, createBooking);
-router.route('/:id').get(getBooking).put(bookingValidation, updateBooking).delete(deleteBooking);
+router.route('/:id').get(getBooking).put(bookingUpdateValidation, updateBooking).delete(deleteBooking);
 
 module.exports = router;

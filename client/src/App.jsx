@@ -10,8 +10,6 @@ import Services from './pages/Services';
 import Providers from './pages/Providers';
 import About from './pages/About';
 
-<Route path="/about" element={<About />} />
-
 import ProviderProfile from './pages/ProviderProfile';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
@@ -19,11 +17,16 @@ import Signup from './pages/Signup';
 // Protected user pages
 import UserDashboard from './pages/UserDashboard';
 
+// Protected provider pages
+import ProviderDashboard from './pages/ProviderDashboard';
+import ProviderSettings from './pages/ProviderSettings';
+
 // Protected admin pages
 import AdminDashboard from './pages/admin/AdminDashboard';
 import ManageCategories from './pages/admin/ManageCategories';
 import ManageServices from './pages/admin/ManageServices';
 import ManageProviders from './pages/admin/ManageProviders';
+import ManageUsers from './pages/admin/ManageUsers';
 import AdminBookings from './pages/admin/AdminBookings';
 
 import './styles/index.css';
@@ -51,6 +54,24 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <UserDashboard />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Protected provider routes */}
+              <Route
+                path="/provider/dashboard"
+                element={
+                  <ProtectedRoute providerOnly={true}>
+                    <ProviderDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/provider/settings"
+                element={
+                  <ProtectedRoute providerOnly={true}>
+                    <ProviderSettings />
                   </ProtectedRoute>
                 }
               />
@@ -93,6 +114,14 @@ function App() {
                 element={
                   <ProtectedRoute adminOnly={true}>
                     <AdminBookings />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/users"
+                element={
+                  <ProtectedRoute adminOnly={true}>
+                    <ManageUsers />
                   </ProtectedRoute>
                 }
               />

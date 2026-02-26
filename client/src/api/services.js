@@ -59,8 +59,16 @@ export const serviceAPI = {
 
 // Service Provider API
 export const providerAPI = {
-  getAll: async (serviceId = null) => {
-    const url = serviceId ? `/providers?service=${serviceId}` : '/providers';
+  getAll: async (queryOrServiceId = null) => {
+    let url = '/providers';
+    if (queryOrServiceId) {
+      // If it starts with '?', it's a raw query string (e.g., ?user=xxx)
+      if (queryOrServiceId.startsWith('?')) {
+        url = `/providers${queryOrServiceId}`;
+      } else {
+        url = `/providers?service=${queryOrServiceId}`;
+      }
+    }
     const response = await api.get(url);
     return response.data;
   },
@@ -140,6 +148,24 @@ export const reviewAPI = {
 
   delete: async (id) => {
     const response = await api.delete(`/reviews/${id}`);
+    return response.data;
+  },
+};
+
+// User API (Admin)
+export const userAPI = {
+  getAll: async () => {
+    const response = await api.get('/users');
+    return response.data;
+  },
+
+  getById: async (id) => {
+    const response = await api.get(`/users/${id}`);
+    return response.data;
+  },
+
+  delete: async (id) => {
+    const response = await api.delete(`/users/${id}`);
     return response.data;
   },
 };

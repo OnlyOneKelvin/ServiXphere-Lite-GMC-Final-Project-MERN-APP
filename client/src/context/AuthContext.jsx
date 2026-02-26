@@ -99,6 +99,11 @@ export const AuthProvider = ({ children }) => {
     return user?.role === 'admin';
   };
 
+  // Check if user is provider
+  const isProvider = () => {
+    return user?.role === 'provider';
+  };
+
   const value = {
     user,
     loading,
@@ -107,6 +112,7 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     isAdmin,
+    isProvider,
     isAuthenticated: !!user,
   };
 

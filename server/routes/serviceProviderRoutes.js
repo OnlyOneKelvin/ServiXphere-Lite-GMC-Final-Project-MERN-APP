@@ -30,12 +30,11 @@ const providerValidation = [
 router.route('/').get(getProviders);
 router.route('/:id').get(getProvider);
 
-// Protected admin routes
+// Protected routes
 router.use(protect);
-router.use(authorize('admin'));
 
-router.post('/', providerValidation, createProvider);
-router.put('/:id', providerValidation, updateProvider);
-router.delete('/:id', deleteProvider);
+router.post('/', authorize('admin'), providerValidation, createProvider);
+router.put('/:id', authorize('admin', 'provider'), providerValidation, updateProvider);
+router.delete('/:id', authorize('admin'), deleteProvider);
 
 module.exports = router;

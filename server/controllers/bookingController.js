@@ -10,8 +10,15 @@ exports.getBookings = async (req, res, next) => {
   try {
     let query = {};
 
-    // Users can only see their own bookings, admins can see all
-    if (req.user.role !== 'admin') {
+    // Users can only see their own bookings, admins can see all, providers see bookings to them
+    if (req.user.role === 'provider') {
+      const provider = await ServiceProvider.findOne({ user: req.user.id });
+      if (provider) {
+        query.provider = provider._id;
+      } else {
+        return res.status(200).json({ success: true, count: 0, data: [] });
+      }
+    } else if (req.user.role !== 'admin') {
       query.user = req.user.id;
     }
 
@@ -43,8 +50,12 @@ exports.getBooking = async (req, res, next) => {
   try {
     let query = { _id: req.params.id };
 
-    // Users can only see their own bookings
-    if (req.user.role !== 'admin') {
+    if (req.user.role === 'provider') {
+      const provider = await ServiceProvider.findOne({ user: req.user.id });
+      if (provider) {
+        query.provider = provider._id;
+      }
+    } else if (req.user.role !== 'admin') {
       query.user = req.user.id;
     }
 
@@ -142,8 +153,12 @@ exports.updateBooking = async (req, res, next) => {
 
     let query = { _id: req.params.id };
 
-    // Users can only update their own bookings
-    if (req.user.role !== 'admin') {
+    if (req.user.role === 'provider') {
+      const provider = await ServiceProvider.findOne({ user: req.user.id });
+      if (provider) {
+        query.provider = provider._id;
+      }
+    } else if (req.user.role !== 'admin') {
       query.user = req.user.id;
     }
 
@@ -184,8 +199,12 @@ exports.deleteBooking = async (req, res, next) => {
   try {
     let query = { _id: req.params.id };
 
-    // Users can only delete their own bookings
-    if (req.user.role !== 'admin') {
+    if (req.user.role === 'provider') {
+      const provider = await ServiceProvider.findOne({ user: req.user.id });
+      if (provider) {
+        query.provider = provider._id;
+      }
+    } else if (req.user.role !== 'admin') {
       query.user = req.user.id;
     }
 

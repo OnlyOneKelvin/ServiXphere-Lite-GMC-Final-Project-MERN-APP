@@ -11,7 +11,12 @@ exports.getProviders = async (req, res, next) => {
 
     // Filter by service if provided
     if (req.query.service) {
-      query = { servicesOffered: req.query.service };
+      query.servicesOffered = req.query.service;
+    }
+
+    // Filter by user (so a logged in provider can find their own profile)
+    if (req.query.user) {
+      query.user = req.query.user;
     }
 
     const providers = await ServiceProvider.find(query)
@@ -98,7 +103,7 @@ exports.createProvider = async (req, res, next) => {
 
 // @desc    Update provider
 // @route   PUT /api/v1/providers/:id
-// @access  Private/Admin
+// @access  Private/Admin or Provider
 exports.updateProvider = async (req, res, next) => {
   try {
     const errors = validationResult(req);
@@ -116,6 +121,16 @@ exports.updateProvider = async (req, res, next) => {
         success: false,
         message: 'Service provider not found',
       });
+    }
+
+    // Make sure user is admin or is updating their own provider profile
+    if (req.user.role !== 'admin') {
+      if (provider.user && provider.user.toString() !== req.user.id) {
+        return res.status(403).json({
+          success: false,
+          message: 'Not authorized to update this provider profile',
+        });
+      }
     }
 
     // Verify services exist if updating services

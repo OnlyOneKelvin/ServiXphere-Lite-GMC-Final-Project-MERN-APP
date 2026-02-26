@@ -52,24 +52,24 @@ const importData = async () => {
 
     // Create categories
     const category1 = await ServiceCategory.create({
-  name: 'Home Services',
-  description: 'Professional home maintenance and repair services',
-});
+      name: 'Home Services',
+      description: 'Professional home maintenance and repair services',
+    });
 
-const category2 = await ServiceCategory.create({
-  name: 'Beauty & Wellness',
-  description: 'Personal care and wellness services',
-});
+    const category2 = await ServiceCategory.create({
+      name: 'Beauty & Wellness',
+      description: 'Personal care and wellness services',
+    });
 
-const category3 = await ServiceCategory.create({
-  name: 'Technology',
-  description: 'IT and technology support services',
-});
+    const category3 = await ServiceCategory.create({
+      name: 'Technology',
+      description: 'IT and technology support services',
+    });
 
-const category4 = await ServiceCategory.create({
-  name: 'Automobile Services',
-  description: 'Car repairs, maintenance, detailing, diagnostics, and automobile support services',
-});
+    const category4 = await ServiceCategory.create({
+      name: 'Automobile Services',
+      description: 'Car repairs, maintenance, detailing, diagnostics, and automobile support services',
+    });
 
     // Create services
     const service1 = await Service.create({
@@ -110,12 +110,51 @@ const category4 = await ServiceCategory.create({
 
     console.log('Services created...');
 
-    // Create service providers
+    // Create provider users (so they can log in and manage their profiles)
+    const providerUser1 = await User.create({
+      name: 'Mike Johnson',
+      email: 'mike@example.com',
+      password: 'provider123',
+      role: 'provider',
+    });
+
+    const providerUser2 = await User.create({
+      name: 'Sarah Electric',
+      email: 'sarah@example.com',
+      password: 'provider123',
+      role: 'provider',
+    });
+
+    const providerUser3 = await User.create({
+      name: 'Style Studio Owner',
+      email: 'style@example.com',
+      password: 'provider123',
+      role: 'provider',
+    });
+
+    const providerUser4 = await User.create({
+      name: 'Spa Manager',
+      email: 'spa@example.com',
+      password: 'provider123',
+      role: 'provider',
+    });
+
+    const providerUser5 = await User.create({
+      name: 'TechFix Owner',
+      email: 'techfix@example.com',
+      password: 'provider123',
+      role: 'provider',
+    });
+
+    console.log('Provider users created...');
+
+    // Create service providers (linked to their user accounts)
     const provider1 = await ServiceProvider.create({
       name: 'Mike Plumbing Services',
       phone: '+1-555-0101',
       location: 'New York, NY',
       servicesOffered: [service1._id],
+      user: providerUser1._id,
       averageRating: 0,
     });
 
@@ -124,6 +163,7 @@ const category4 = await ServiceCategory.create({
       phone: '+1-555-0102',
       location: 'Los Angeles, CA',
       servicesOffered: [service2._id],
+      user: providerUser2._id,
       averageRating: 0,
     });
 
@@ -132,6 +172,7 @@ const category4 = await ServiceCategory.create({
       phone: '+1-555-0103',
       location: 'Chicago, IL',
       servicesOffered: [service3._id],
+      user: providerUser3._id,
       averageRating: 0,
     });
 
@@ -140,6 +181,7 @@ const category4 = await ServiceCategory.create({
       phone: '+1-555-0104',
       location: 'Miami, FL',
       servicesOffered: [service4._id],
+      user: providerUser4._id,
       averageRating: 0,
     });
 
@@ -148,6 +190,7 @@ const category4 = await ServiceCategory.create({
       phone: '+1-555-0105',
       location: 'Seattle, WA',
       servicesOffered: [service5._id, service6._id],
+      user: providerUser5._id,
       averageRating: 0,
     });
 

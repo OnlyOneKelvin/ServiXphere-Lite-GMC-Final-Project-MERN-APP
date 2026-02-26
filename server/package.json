@@ -4,9 +4,9 @@
   "description": "Service marketplace backend - ServiXphere Lite",
   "main": "server/server.js",
   "scripts": {
-    "dev": "nodemon server/server.js",
-    "start": "node server/server.js",
-    "seed": "node server/seed.js"
+    "dev": "node --watch server.js",
+    "start": "node server.js",
+    "seed": "node seed.js"
   },
   "keywords": ["mern", "backend", "marketplace"],
   "author": "",
