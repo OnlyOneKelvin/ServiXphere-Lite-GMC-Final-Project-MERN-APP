@@ -7,7 +7,7 @@ const { validationResult } = require('express-validator');
 // @access  Public
 exports.getServices = async (req, res, next) => {
   try {
-    let query;
+    let query = {};
 
     // Filter by category if provided
     if (req.query.category) {
