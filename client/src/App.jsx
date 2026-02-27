@@ -16,6 +16,8 @@ import Signup from './pages/Signup';
 
 // Protected user pages
 import UserDashboard from './pages/UserDashboard';
+import PaymentVerify from './pages/PaymentVerify';
+import MockPayment from './pages/MockPayment';
 
 // Protected provider pages
 import ProviderDashboard from './pages/ProviderDashboard';
@@ -54,6 +56,22 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <UserDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/verify-payment"
+                element={
+                  <ProtectedRoute>
+                    <PaymentVerify />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/mock-payment"
+                element={
+                  <ProtectedRoute>
+                    <MockPayment />
                   </ProtectedRoute>
                 }
               />

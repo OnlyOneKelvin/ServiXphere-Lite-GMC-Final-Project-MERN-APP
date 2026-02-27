@@ -11,7 +11,7 @@ const ManageServices = () => {
   const [success, setSuccess] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editingService, setEditingService] = useState(null);
-  const [formData, setFormData] = useState({ name: '', description: '', category: '' });
+  const [formData, setFormData] = useState({ name: '', description: '', category: '', price: '' });
 
   useEffect(() => {
     fetchData();
@@ -50,7 +50,7 @@ const ManageServices = () => {
           setSuccess('Service updated successfully!');
           setShowForm(false);
           setEditingService(null);
-          setFormData({ name: '', description: '', category: '' });
+          setFormData({ name: '', description: '', category: '', price: '' });
           fetchData();
         }
       } else {
@@ -58,7 +58,7 @@ const ManageServices = () => {
         if (response.success) {
           setSuccess('Service created successfully!');
           setShowForm(false);
-          setFormData({ name: '', description: '', category: '' });
+          setFormData({ name: '', description: '', category: '', price: '' });
           fetchData();
         }
       }
@@ -73,6 +73,7 @@ const ManageServices = () => {
       name: service.name,
       description: service.description || '',
       category: service.category?._id || service.category || '',
+      price: service.price || '',
     });
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -97,7 +98,7 @@ const ManageServices = () => {
   const handleCancel = () => {
     setShowForm(false);
     setEditingService(null);
-    setFormData({ name: '', description: '', category: '' });
+    setFormData({ name: '', description: '', category: '', price: '' });
   };
 
   if (loading) return <Loading />;
@@ -183,6 +184,24 @@ const ManageServices = () => {
                   ))}
                 </select>
               </div>
+              <div className="mb-5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Price (₦)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-semibold pointer-events-none">₦</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="100"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg pl-8 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 shadow-sm transition"
+                    placeholder="0 (free)"
+                  />
+                </div>
+                <p className="text-xs text-gray-400 mt-1">Leave at 0 for free services</p>
+              </div>
               <div className="flex gap-3">
                 <button
                   type="submit"
@@ -222,6 +241,11 @@ const ManageServices = () => {
                     {service.category.name}
                   </span>
                 )}
+                <div className="mt-2">
+                  <span className="text-lg font-bold text-gray-900">
+                    {service.price > 0 ? `₦${service.price.toLocaleString()}` : 'Free'}
+                  </span>
+                </div>
               </div>
 
               {/* Actions — pinned to bottom */}

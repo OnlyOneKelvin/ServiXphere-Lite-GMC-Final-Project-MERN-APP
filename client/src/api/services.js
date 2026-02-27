@@ -169,3 +169,21 @@ export const userAPI = {
     return response.data;
   },
 };
+
+// Wallet API
+export const walletAPI = {
+  initializePayment: async (amount) => {
+    const response = await api.post('/wallet/initialize', { amount });
+    return response.data;
+  },
+
+  verifyPayment: async (reference) => {
+    const response = await api.get(`/wallet/verify/${reference}`);
+    return response.data;
+  },
+
+  getBalance: async () => {
+    const response = await api.get('/wallet/balance');
+    return response.data;
+  }
+};

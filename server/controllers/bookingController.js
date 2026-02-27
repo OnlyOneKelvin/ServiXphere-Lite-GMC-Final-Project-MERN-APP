@@ -1,6 +1,8 @@
 const Booking = require('../models/Booking');
 const ServiceProvider = require('../models/ServiceProvider');
 const Service = require('../models/Service');
+const User = require('../models/User');
+const Transaction = require('../models/Transaction');
 const { validationResult } = require('express-validator');
 
 // @desc    Get all bookings
@@ -30,7 +32,7 @@ exports.getBookings = async (req, res, next) => {
     const bookings = await Booking.find(query)
       .populate('user', 'name email')
       .populate('provider', 'name phone location averageRating')
-      .populate('service', 'name description')
+      .populate('service', 'name description price')
       .sort({ date: -1 });
 
     res.status(200).json({
@@ -62,7 +64,7 @@ exports.getBooking = async (req, res, next) => {
     const booking = await Booking.findOne(query)
       .populate('user', 'name email')
       .populate('provider', 'name phone location averageRating')
-      .populate('service', 'name description');
+      .populate('service', 'name description price');
 
     if (!booking) {
       return res.status(404).json({
@@ -80,7 +82,7 @@ exports.getBooking = async (req, res, next) => {
   }
 };
 
-// @desc    Create booking
+// @desc    Create booking (with wallet deduction)
 // @route   POST /api/v1/bookings
 // @access  Private
 exports.createBooking = async (req, res, next) => {
@@ -119,15 +121,44 @@ exports.createBooking = async (req, res, next) => {
       });
     }
 
+    const servicePrice = service.price || 0;
+
+    // If service has a price, check wallet and deduct
+    if (servicePrice > 0) {
+      const user = await User.findById(req.user.id);
+      const currentBalance = user.walletBalance || 0;
+
+      if (currentBalance < servicePrice) {
+        return res.status(400).json({
+          success: false,
+          message: `Insufficient wallet balance. Service costs ₦${servicePrice.toLocaleString()} but your balance is ₦${currentBalance.toLocaleString()}. Please top up your wallet.`,
+        });
+      }
+
+      // Deduct from wallet
+      user.walletBalance = currentBalance - servicePrice;
+      await user.save();
+
+      // Log the payment transaction
+      await Transaction.create({
+        user: user._id,
+        amount: servicePrice,
+        type: 'payment',
+        status: 'success',
+        reference: 'booking_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+      });
+    }
+
     const booking = await Booking.create({
       ...req.body,
       user: req.user.id,
+      amount: servicePrice,
     });
 
     const populatedBooking = await Booking.findById(booking._id)
       .populate('user', 'name email')
       .populate('provider', 'name phone location averageRating')
-      .populate('service', 'name description');
+      .populate('service', 'name description price');
 
     res.status(201).json({
       success: true,

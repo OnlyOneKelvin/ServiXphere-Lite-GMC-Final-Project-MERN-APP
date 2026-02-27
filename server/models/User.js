@@ -31,6 +31,10 @@ const userSchema = new mongoose.Schema(
             enum: ['user', 'provider', 'admin'],
             default: 'user',
         },
+        walletBalance: {
+            type: Number,
+            default: 0,
+        },
         resetPasswordToken: String,
         resetPasswordExpire: Date,
     },

@@ -1,18 +1,30 @@
 import { useState, useEffect, useRef } from 'react';
-import { bookingAPI } from '../api/services';
+import { useNavigate } from 'react-router-dom';
+import { bookingAPI, walletAPI } from '../api/services';
+import { useAuth } from '../context/AuthContext';
 import Loading from '../components/Loading';
 import Alert from '../components/Alert';
 
 const UserDashboard = () => {
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filterStatus, setFilterStatus] = useState('');
   const [openMenuId, setOpenMenuId] = useState(null);
+
+  // Wallet State
+  const { user } = useAuth();
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [showBalance, setShowBalance] = useState(true);
+  const [showTopUpModal, setShowTopUpModal] = useState(false);
+  const [topUpAmount, setTopUpAmount] = useState('');
+  const [topUpLoading, setTopUpLoading] = useState(false);
+
   const menuRef = useRef(null);
 
   useEffect(() => {
-    fetchBookings();
+    fetchData();
   }, [filterStatus]);
 
   // Close kebab menu when clicking outside
@@ -26,17 +38,61 @@ const UserDashboard = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const fetchBookings = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
+      const [bookingsRes, walletRes] = await Promise.all([
+        bookingAPI.getAll(filterStatus || null),
+        walletAPI.getBalance()
+      ]);
+
+      if (bookingsRes.success) {
+        setBookings(bookingsRes.data);
+      }
+      if (walletRes.success) {
+        setWalletBalance(walletRes.data.balance);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to load dashboard data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchBookings = async () => {
+    try {
       const response = await bookingAPI.getAll(filterStatus || null);
       if (response.success) {
         setBookings(response.data);
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load bookings');
+    }
+  };
+
+  const handleTopUpSubmit = async (e) => {
+    e.preventDefault();
+    if (!topUpAmount || topUpAmount < 100) {
+      setError('Minimum top-up amount is ₦100');
+      return;
+    }
+
+    try {
+      setTopUpLoading(true);
+      setError(null);
+      const response = await walletAPI.initializePayment(Number(topUpAmount));
+
+      if (response.success && response.data.reference) {
+        setShowTopUpModal(false);
+        // Use React Router navigation instead of full page redirect
+        navigate(`/mock-payment?reference=${response.data.reference}&amount=${topUpAmount}`);
+      } else {
+        setError('Failed to initialize payment');
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Payment initialization failed');
     } finally {
-      setLoading(false);
+      setTopUpLoading(false);
     }
   };
 
@@ -121,8 +177,80 @@ const UserDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+        {/* Profile Card / Header */}
+        <div className="flex items-center gap-4 mb-5 mt-2">
+          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center border-2 border-white shadow-sm overflow-hidden">
+            <span className="font-bold text-xl text-purple-600">
+              {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+            </span>
+          </div>
+          <div className="leading-tight">
+            <h1 className="text-xl font-bold text-gray-900 tracking-tight">{user?.name || 'User Name'}</h1>
+            <div className="flex items-center gap-1.5 text-sm text-gray-500 mt-0.5">
+              <span>{user?.email || 'user@example.com'}</span>
+              <svg className="w-3.5 h-3.5 text-gray-400 cursor-pointer hover:text-purple-600 transition-colors align-baseline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Wallet Section */}
+        <div className="rounded-[24px] p-6 mb-10 relative overflow-hidden shadow-lg" style={{ background: 'linear-gradient(135deg, #1C1A1D 0%, #2A1F3D 50%, #1C1A1D 100%)' }}>
+          {/* Decorative background shapes */}
+          <div className="absolute -right-16 -top-16 w-64 h-64 border-[1px] border-white/[0.07] rounded-full" />
+          <div className="absolute -right-8 -top-8 w-48 h-48 border-[1px] border-white/[0.07] rounded-full" />
+          <div className="absolute -right-2 -top-2 w-32 h-32 border-[1px] border-white/[0.04] rounded-full" />
+          {/* Subtle gradient mesh blobs */}
+          <div className="absolute top-0 left-0 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-10 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl" />
+
+          <div className="relative z-10">
+            <p className="text-gray-400 text-sm font-medium mb-3">{user?.name || 'User Name'}</p>
+
+            {/* Balance + Eye toggle grouped inline */}
+            <div className="flex items-center gap-3 mb-3">
+              <h2 className="text-[34px] font-black text-white tracking-tight leading-none">
+                {showBalance ? `₦${walletBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : '₦ * * *'}
+              </h2>
+              <button
+                onClick={() => setShowBalance(!showBalance)}
+                className="text-gray-400 hover:text-white transition p-1 mt-1"
+                aria-label="Toggle balance visibility"
+              >
+                {showBalance ? (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                )}
+              </button>
+            </div>
+
+            <button className="flex items-center gap-1 text-[14px] font-medium text-gray-400 hover:text-purple-300 transition group">
+              Transactions
+              <svg className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="flex justify-end mt-3 relative z-10">
+            <button
+              onClick={() => setShowTopUpModal(true)}
+              className="bg-purple-600 hover:bg-purple-500 text-white text-sm px-6 py-2.5 rounded-xl font-bold transition-all shadow-md shadow-purple-900/30 flex items-center gap-1.5"
+            >
+              Top-up <span className="text-lg leading-none font-black">+</span>
+            </button>
+          </div>
+        </div>
+
         {/* Header row — title left, filter right */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-5">
           <h1 className="text-2xl font-bold text-gray-900">My Bookings</h1>
           <select
             value={filterStatus}
@@ -237,11 +365,95 @@ const UserDashboard = () => {
             })}
           </div>
         ) : (
-          <div className="text-center py-16">
-            <svg className="w-12 h-12 text-gray-200 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-            </svg>
-            <p className="text-gray-400 text-sm">No bookings found.</p>
+          <div className="text-center py-20">
+            <div className="w-20 h-20 mx-auto mb-5 bg-gray-100 rounded-full flex items-center justify-center">
+              <svg className="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+              </svg>
+            </div>
+            <p className="text-gray-500 font-medium mb-1">No bookings yet</p>
+            <p className="text-gray-400 text-sm mb-6">Start by exploring our services and booking your first one.</p>
+            <button
+              onClick={() => navigate('/services')}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2.5 rounded-xl font-semibold text-sm transition-colors shadow-sm"
+            >
+              Explore Services
+            </button>
+          </div>
+        )}
+
+        {/* Top Up Modal */}
+        {showTopUpModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div className="bg-white rounded-[24px] shadow-xl w-full max-w-sm overflow-hidden relative">
+              <div className="px-6 py-5 flex items-center justify-between">
+                <h3 className="text-[22px] font-bold text-gray-900 tracking-tight">Top Up Wallet</h3>
+                <button
+                  onClick={() => setShowTopUpModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors bg-gray-100 hover:bg-gray-200 rounded-full p-1.5"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <form onSubmit={handleTopUpSubmit} className="px-6 pb-6">
+                <div className="mb-4">
+                  <label htmlFor="amount" className="block text-[14px] font-medium text-gray-500 mb-2">
+                    Enter Amount
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg font-bold select-none pointer-events-none">₦</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      id="amount"
+                      required
+                      value={topUpAmount ? Number(topUpAmount).toLocaleString('en-US') : ''}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/,/g, '').replace(/[^0-9]/g, '');
+                        setTopUpAmount(raw);
+                      }}
+                      className="block w-full pl-10 pr-4 py-4 bg-[#F7F7F8] border border-gray-200 rounded-2xl text-xl font-semibold text-gray-900 placeholder:text-gray-300 placeholder:font-normal transition-all focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 focus:bg-white"
+                      placeholder="0"
+                      style={{ appearance: 'textfield', MozAppearance: 'textfield', WebkitAppearance: 'none' }}
+                    />
+                  </div>
+                </div>
+
+                {/* Quick Amount Pills */}
+                <div className="flex gap-2 mb-6 flex-wrap">
+                  {[1000, 5000, 10000, 20000].map((amt) => (
+                    <button
+                      key={amt}
+                      type="button"
+                      onClick={() => setTopUpAmount(String(amt))}
+                      className={`px-4 py-2 rounded-full text-sm font-semibold transition-all border ${topUpAmount === String(amt)
+                          ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
+                          : 'bg-white text-gray-600 border-gray-200 hover:border-purple-300 hover:text-purple-600'
+                        }`}
+                    >
+                      ₦{amt.toLocaleString()}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={topUpLoading || !topUpAmount || Number(topUpAmount) < 100}
+                  className="w-full py-4 bg-purple-600 hover:bg-purple-500 text-white rounded-full font-bold text-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center shadow-lg shadow-purple-200/50"
+                >
+                  {topUpLoading ? (
+                    <svg className="animate-spin h-6 w-6 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    'Continue'
+                  )}
+                </button>
+              </form>
+            </div>
           </div>
         )}
       </div>

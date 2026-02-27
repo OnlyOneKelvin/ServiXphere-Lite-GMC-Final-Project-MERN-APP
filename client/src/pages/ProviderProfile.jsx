@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { providerAPI, reviewAPI, bookingAPI } from '../api/services';
+import { providerAPI, reviewAPI, bookingAPI, walletAPI } from '../api/services';
 import Loading from '../components/Loading';
 import Alert from '../components/Alert';
 
 const ProviderProfile = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
 
   const [provider, setProvider] = useState(null);
@@ -26,6 +27,7 @@ const ProviderProfile = () => {
   });
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(null);
+  const [walletBalance, setWalletBalance] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -52,6 +54,18 @@ const ProviderProfile = () => {
     fetchData();
   }, [id]);
 
+  // Fetch wallet balance for authenticated users
+  useEffect(() => {
+    const fetchWallet = async () => {
+      if (!isAuthenticated) return;
+      try {
+        const res = await walletAPI.getBalance();
+        if (res.success) setWalletBalance(res.data.balance);
+      } catch (e) { /* ignore */ }
+    };
+    fetchWallet();
+  }, [isAuthenticated]);
+
   const handleBookingSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -66,9 +80,14 @@ const ProviderProfile = () => {
       });
 
       if (response.success) {
-        setSuccess('Booking created successfully!');
+        setSuccess('Booking created successfully! Wallet has been charged.');
         setShowBookingForm(false);
         setBookingData({ service: '', date: '' });
+        // Refresh wallet balance
+        try {
+          const walletRes = await walletAPI.getBalance();
+          if (walletRes.success) setWalletBalance(walletRes.data.balance);
+        } catch (e) { /* ignore */ }
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create booking');
@@ -212,7 +231,7 @@ const ProviderProfile = () => {
                     key={service._id}
                     className="bg-purple-50 text-purple-700 text-sm px-3 py-1 rounded-full font-medium"
                   >
-                    {service.name}
+                    {service.name}{service.price > 0 ? ` — ₦${service.price.toLocaleString()}` : ''}
                   </span>
                 ))}
               </div>
@@ -271,7 +290,7 @@ const ProviderProfile = () => {
                   <option value="">Choose a service...</option>
                   {provider.servicesOffered?.map((service) => (
                     <option key={service._id} value={service._id}>
-                      {service.name}
+                      {service.name}{service.price > 0 ? ` — ₦${service.price.toLocaleString()}` : ' — Free'}
                     </option>
                   ))}
                 </select>
@@ -290,6 +309,37 @@ const ProviderProfile = () => {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
               </div>
+
+              {/* Wallet balance summary */}
+              {bookingData.service && (() => {
+                const selectedService = provider.servicesOffered?.find(s => s._id === bookingData.service);
+                const price = selectedService?.price || 0;
+                const insufficient = price > 0 && walletBalance < price;
+                return (
+                  <div className={`mb-5 p-4 rounded-xl border text-sm ${insufficient ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'}`}>
+                    <div className="flex justify-between mb-1">
+                      <span className="text-gray-600">Service Cost</span>
+                      <span className="font-semibold text-gray-900">₦{price.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Wallet Balance</span>
+                      <span className={`font-semibold ${insufficient ? 'text-red-600' : 'text-green-600'}`}>₦{walletBalance.toLocaleString()}</span>
+                    </div>
+                    {insufficient && (
+                      <div className="mt-3 flex items-center justify-between">
+                        <p className="text-red-600 text-xs font-medium">Insufficient balance</p>
+                        <button
+                          type="button"
+                          onClick={() => navigate('/dashboard')}
+                          className="text-xs text-purple-600 font-semibold hover:underline"
+                        >
+                          Top up wallet →
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
               <button
                 type="submit"
                 disabled={submitting}
